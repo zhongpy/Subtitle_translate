@@ -21,7 +21,10 @@ def initialize_google_translate_client():
     client = translate.TranslationServiceClient()
     project_id = "elated-emitter-384907"  # 替换为你的项目ID
     location = "global"
-    return client, f"projects/{project_id}/locations/{location}"
+    #model = f"projects/{project_id}/locations/global/models/translate.en-zh"
+    model = f"projects/{project_id}/locations/{location}"
+    return client, model
+    #return client, f"projects/{project_id}/locations/{location}"
 
 # 翻译一批字幕文本
 def translate_batch_with_google(client, parent, texts):
@@ -118,9 +121,31 @@ def process_all_files(folder_path, client, parent, batch_size=100):
                 except Exception as e:
                     logger.error(f"Error processing {srt_file}: {e}", exc_info=True)
 
-if __name__ == "__main__":
+# 示例测试翻译
+def test_translation():
     client, parent = initialize_google_translate_client()
-    folder_to_process = r'F:\Subtitle'
+    texts = ["我真的不是什么蔷薇 集团 的 白 总"]
+    try:
+        response = client.translate_text(
+            request={
+                "parent": parent,
+                "contents": texts,
+                "mime_type": "text/plain",
+                "source_language_code": "zh",
+                "target_language_code": "en",
+            }
+        )
+        translated_texts = [translation.translated_text for translation in response.translations]
+        print("Translated texts:", translated_texts)
+    except Exception as e:
+        logger.error(f"Translation failed: {e}", exc_info=True)
+
+def translate_all():
+    client, parent = initialize_google_translate_client()
+    folder_to_process = r'e:\Subtitle'
     logger.info(f"Starting batch subtitle processing in folder: {folder_to_process}")
     process_all_files(folder_to_process, client, parent, batch_size=100)
     logger.info("Batch subtitle processing completed.")
+
+if __name__ == "__main__":
+    translate_all()
